@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "all" && "${2:-}" == "servers" && $# -eq 2 ]]; then
+  "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/start-all-servers"
+else
+  echo "Usage: ./start all servers"
+  echo "Direct script: ./scripts/start-all-servers"
+  exit 1
+fi

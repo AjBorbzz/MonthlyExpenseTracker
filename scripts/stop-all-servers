@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PID_FILE="$APP_ROOT/.server-pids"
+PORTS=(8000 3000)
+
+if [[ ! -f "$APP_ROOT/README.md" ]] || ! grep -q "Monthly Family Expense Tracker" "$APP_ROOT/README.md"; then
+  echo "This script must be run from the expense-tracker-family app."
+  exit 1
+fi
+
+pid_belongs_to_app() {
+  local pid="$1"
+  local command
+  local cwd
+  command="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | awk '/^n/ {print substr($0, 2); exit}' || true)"
+  [[ "$command" == *"$APP_ROOT"* || "$cwd" == "$APP_ROOT" || "$cwd" == "$APP_ROOT/"* ]]
+}
+
+stop_pid() {
+  local pid="$1"
+  local label="$2"
+  if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return
+  fi
+  if ! pid_belongs_to_app "$pid"; then
+    echo "Skipping $label PID $pid because it does not belong to this app."
+    return
+  fi
+  echo "Stopping $label (PID $pid) ..."
+  kill "$pid" 2>/dev/null || true
+}
+
+if [[ -f "$PID_FILE" ]]; then
+  # shellcheck disable=SC1090
+  source "$PID_FILE"
+  stop_pid "${BACKEND_PID:-}" "backend"
+  stop_pid "${FRONTEND_PID:-}" "frontend"
+fi
+
+for port in "${PORTS[@]}"; do
+  while IFS= read -r pid; do
+    [[ -z "$pid" ]] && continue
+    stop_pid "$pid" "process on port $port"
+  done < <(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null || true)
+done
+
+rm -f "$PID_FILE"
+echo "All expense-tracker-family servers have been stopped."

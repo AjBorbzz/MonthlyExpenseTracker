@@ -1,0 +1,4 @@
+expense_date,description,category,amount,merchant,payment_method,notes,is_recurring
+2026-06-01,Weekly grocery run,Groceries,2450.75,SM Supermarket,Card,Family groceries,false
+2026-06-02,Taxi to school,Transportation,320.00,Grab,E-wallet,Morning commute,false
+2026-06-05,Internet subscription,Internet,1899.00,Converge,Bank Transfer,Monthly bill,true

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${1:-}" == "all" && "${2:-}" == "servers" && $# -eq 2 ]]; then
+  "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/scripts/stop-all-servers"
+else
+  echo "Usage: ./stop all servers"
+  echo "Direct script: ./scripts/stop-all-servers"
+  exit 1
+fi

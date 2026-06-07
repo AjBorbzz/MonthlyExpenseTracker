@@ -1,0 +1,70 @@
+# Frontend
+
+Next.js App Router frontend for the Monthly Family Expense Tracker.
+
+## Run
+
+From the project root, the easiest option is:
+
+```bash
+./start all servers
+```
+
+Frontend-only manual run:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The app expects the API at `http://localhost:8000`. Override with:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+```
+
+## Expense CSV Import
+
+Open `/expenses`, then use:
+
+- `Template` to download `expense-import-template.csv`
+- `Import CSV` to upload a filled template
+
+The frontend displays imported, skipped, and error counts after upload.
+
+## Stop
+
+From the project root:
+
+```bash
+./stop all servers
+```
+
+Frontend-only manual stop:
+
+Press `Control + C` in the terminal running `npm run dev`.
+
+If port `3000` is still busy:
+
+```bash
+lsof -i :3000
+kill <PID>
+```
+
+Demo login:
+
+- Email: `demo@example.com`
+- Password: `password123`
+
+## Pages
+
+- `/login` and `/signup`
+- `/dashboard`
+- `/expenses`
+- `/categories`
+- `/income`
+- `/budgets`
+- `/goals`
+- `/recurring`
+- `/settings`

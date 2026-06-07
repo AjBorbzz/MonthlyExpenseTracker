@@ -1,0 +1,135 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$APP_ROOT/backend"
+FRONTEND_DIR="$APP_ROOT/frontend"
+LOG_DIR="$APP_ROOT/logs"
+PID_FILE="$APP_ROOT/.server-pids"
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+
+if [[ ! -f "$APP_ROOT/README.md" ]] || ! grep -q "Monthly Family Expense Tracker" "$APP_ROOT/README.md"; then
+  echo "This script must be run from the expense-tracker-family app."
+  exit 1
+fi
+
+mkdir -p "$LOG_DIR"
+
+pid_for_port() {
+  lsof -ti "tcp:$1" -sTCP:LISTEN 2>/dev/null | head -n 1 || true
+}
+
+pid_belongs_to_app() {
+  local pid="$1"
+  local command
+  local cwd
+  command="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | awk '/^n/ {print substr($0, 2); exit}' || true)"
+  [[ "$command" == *"$APP_ROOT"* || "$cwd" == "$APP_ROOT" || "$cwd" == "$APP_ROOT/"* ]]
+}
+
+ensure_port_available_or_owned() {
+  local port="$1"
+  local name="$2"
+  local pid
+  pid="$(pid_for_port "$port")"
+  if [[ -z "$pid" ]]; then
+    return
+  fi
+  if pid_belongs_to_app "$pid"; then
+    echo "$name already appears to be running on port $port (PID $pid)."
+    return
+  fi
+  echo "Port $port is already used by another process (PID $pid)."
+  echo "Stop that process first, then run this script again."
+  exit 1
+}
+
+wait_for_server() {
+  local port="$1"
+  local pid="$2"
+  local name="$3"
+  local log_file="$4"
+  local attempts=30
+
+  for _ in $(seq 1 "$attempts"); do
+    if [[ -n "$(pid_for_port "$port")" ]]; then
+      echo "$name is running on port $port."
+      return
+    fi
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "$name failed to start. Last log lines:"
+      tail -n 20 "$log_file" || true
+      exit 1
+    fi
+    sleep 1
+  done
+
+  echo "$name did not become ready on port $port. Last log lines:"
+  tail -n 20 "$log_file" || true
+  exit 1
+}
+
+echo "Preparing backend dependencies..."
+if [[ ! -x "$BACKEND_DIR/venv/bin/python" ]]; then
+  python3 -m venv "$BACKEND_DIR/venv"
+fi
+
+if ! "$BACKEND_DIR/venv/bin/python" -c "import fastapi, sqlalchemy, jose, passlib" >/dev/null 2>&1; then
+  "$BACKEND_DIR/venv/bin/pip" install -r "$BACKEND_DIR/requirements.txt"
+fi
+
+echo "Preparing database seed data..."
+(cd "$BACKEND_DIR" && venv/bin/python -m app.seed >/dev/null)
+
+echo "Preparing frontend dependencies..."
+if [[ ! -d "$FRONTEND_DIR/node_modules" ]]; then
+  (cd "$FRONTEND_DIR" && npm install)
+fi
+
+ensure_port_available_or_owned "$BACKEND_PORT" "Backend"
+ensure_port_available_or_owned "$FRONTEND_PORT" "Frontend"
+
+BACKEND_PID="$(pid_for_port "$BACKEND_PORT")"
+if [[ -z "$BACKEND_PID" ]]; then
+  echo "Starting backend on http://127.0.0.1:$BACKEND_PORT ..."
+  BACKEND_PID="$(
+    cd "$BACKEND_DIR"
+    nohup venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$BACKEND_PORT" >"$LOG_DIR/backend.log" 2>&1 &
+    echo "$!"
+  )"
+fi
+
+FRONTEND_PID="$(pid_for_port "$FRONTEND_PORT")"
+if [[ -z "$FRONTEND_PID" ]]; then
+  echo "Starting frontend on http://127.0.0.1:$FRONTEND_PORT ..."
+  FRONTEND_PID="$(
+    cd "$FRONTEND_DIR"
+    nohup npm run dev -- --hostname 127.0.0.1 --port "$FRONTEND_PORT" >"$LOG_DIR/frontend.log" 2>&1 &
+    echo "$!"
+  )"
+fi
+
+wait_for_server "$BACKEND_PORT" "$BACKEND_PID" "Backend" "$LOG_DIR/backend.log"
+wait_for_server "$FRONTEND_PORT" "$FRONTEND_PID" "Frontend" "$LOG_DIR/frontend.log"
+
+cat >"$PID_FILE" <<EOF
+APP_ROOT=$APP_ROOT
+BACKEND_PID=$BACKEND_PID
+FRONTEND_PID=$FRONTEND_PID
+BACKEND_PORT=$BACKEND_PORT
+FRONTEND_PORT=$FRONTEND_PORT
+EOF
+
+echo
+echo "All servers are starting."
+echo "Frontend: http://127.0.0.1:$FRONTEND_PORT"
+echo "Backend:  http://127.0.0.1:$BACKEND_PORT"
+echo "API docs: http://127.0.0.1:$BACKEND_PORT/docs"
+echo
+echo "Logs:"
+echo "- $LOG_DIR/backend.log"
+echo "- $LOG_DIR/frontend.log"
+echo
+echo "Stop with: ./stop all servers"
