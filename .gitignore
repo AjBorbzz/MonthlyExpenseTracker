@@ -28,3 +28,9 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+
+__pycache__
+venv
+logs
+.server-pids
