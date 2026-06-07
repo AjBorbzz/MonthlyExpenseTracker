@@ -1,15 +1,15 @@
-# Source this file from the expense-tracker-family project root to enable:
+# Source this file from the Monthly_Expense_Tracker project root to enable:
 #   start all servers
 #   stop all servers
 #
 # Example:
 #   source scripts/expense-tracker-commands.sh
 
-EXPENSE_TRACKER_FAMILY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-${(%):-%x}}")/.." && pwd)"
+MONTHLY_EXPENSE_TRACKER_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]:-${(%):-%x}}")/.." && pwd)"
 
 start() {
   if [[ "${1:-}" == "all" && "${2:-}" == "servers" && $# -eq 2 ]]; then
-    "$EXPENSE_TRACKER_FAMILY_ROOT/scripts/start-all-servers"
+    "$MONTHLY_EXPENSE_TRACKER_ROOT/scripts/start-all-servers"
     return
   fi
 
@@ -23,7 +23,7 @@ start() {
 
 stop() {
   if [[ "${1:-}" == "all" && "${2:-}" == "servers" && $# -eq 2 ]]; then
-    "$EXPENSE_TRACKER_FAMILY_ROOT/scripts/stop-all-servers"
+    "$MONTHLY_EXPENSE_TRACKER_ROOT/scripts/stop-all-servers"
     return
   fi
 

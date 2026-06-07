@@ -9,9 +9,9 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Monthly Family Expense Tracker API", version="1.0.0")
 
 origins = [
-    "http://192.168.254.112:3000",
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://monthly-expense-tracker-1p4g.vercel.app/"
 ]
 
 app.add_middleware(

@@ -10,7 +10,7 @@ BACKEND_PORT=8000
 FRONTEND_PORT=3000
 
 if [[ ! -f "$APP_ROOT/README.md" ]] || ! grep -q "Monthly Family Expense Tracker" "$APP_ROOT/README.md"; then
-  echo "This script must be run from the expense-tracker-family app."
+  echo "This script must be run from the Monthly_Expense_Tracker app root."
   exit 1
 fi
 
@@ -113,7 +113,7 @@ if [[ -z "$FRONTEND_PID" ]]; then
   echo "Starting frontend on http://$LAN_IP:$FRONTEND_PORT ..."
   FRONTEND_PID="$(
     cd "$FRONTEND_DIR"
-    nohup env NEXT_PUBLIC_API_BASE_URL="http://$LAN_IP:$BACKEND_PORT" \
+    nohup env NEXT_PUBLIC_API_URL="http://$LAN_IP:$BACKEND_PORT" \
       npm run dev -- --hostname 0.0.0.0 --port "$FRONTEND_PORT" \
       >"$LOG_DIR/frontend.log" 2>&1 &
     echo "$!"
@@ -134,7 +134,9 @@ EOF
 echo
 echo "All servers are starting."
 echo "Frontend: http://127.0.0.1:$FRONTEND_PORT"
+echo "Frontend LAN: http://$LAN_IP:$FRONTEND_PORT"
 echo "Backend:  http://127.0.0.1:$BACKEND_PORT"
+echo "Backend LAN:  http://$LAN_IP:$BACKEND_PORT"
 echo "API docs: http://127.0.0.1:$BACKEND_PORT/docs"
 echo
 echo "Logs:"
