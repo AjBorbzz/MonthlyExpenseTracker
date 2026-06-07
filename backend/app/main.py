@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+import os
 from .database import Base, engine
 from .routers import auth, budgets, categories, dashboard, expenses, families, income, recurring, savings_goals, users
 
@@ -8,10 +8,18 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Monthly Family Expense Tracker API", version="1.0.0")
 
+raw_origins = os.getenv("BACKEND_CORS_ORIGINS", "")
+
 origins = [
+    origin.strip()
+    for origin in raw_origins.split(",")
+    if origin.strip()
+]
+
+origins += [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "https://monthly-expense-tracker-1p4g.vercel.app/"
+    "http://192.168.254.112:3000",
 ]
 
 app.add_middleware(
