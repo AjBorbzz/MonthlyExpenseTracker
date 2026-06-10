@@ -65,7 +65,7 @@ export default function HomePage() {
           className="object-cover object-[58%_center]"
         />
         <div className="absolute inset-0 bg-[#061814]/75" />
-        <div className="absolute inset-x-0 top-0 z-10 border-b border-white/15 bg-[#061814]/35 backdrop-blur-md">
+        <div className="fixed inset-x-0 top-0 z-[100] border-b border-white/15 bg-[#061814]/35 backdrop-blur-md">
           <nav className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <Link href="/" className="flex items-center gap-3">
               <span className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-primary shadow-sm">
