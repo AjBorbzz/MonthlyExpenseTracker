@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarClock, CircleDollarSign, FolderOpen, Gauge, Home, PiggyBank, ReceiptText, Settings } from "lucide-react";
+import { BarChart3, CalendarClock, CircleDollarSign, FolderOpen, Gauge, Home, PiggyBank, ReceiptText, Settings, Table2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const nav = [
   { href: "/dashboard", label: "Dashboard", icon: Gauge },
+  { href: "/spreadsheet", label: "Spreadsheet", icon: Table2 },
   { href: "/expenses", label: "Expenses", icon: ReceiptText },
   { href: "/categories", label: "Categories", icon: FolderOpen },
   { href: "/income", label: "Income", icon: CircleDollarSign },
