@@ -53,15 +53,15 @@ ensure_port_available_or_owned() {
 }
 
 wait_for_server() {
-  local port="$1"
+  local url="$1"
   local pid="$2"
   local name="$3"
   local log_file="$4"
   local attempts=30
 
   for _ in $(seq 1 "$attempts"); do
-    if [[ -n "$(pid_for_port "$port")" ]]; then
-      echo "$name is running on port $port."
+    if curl -fsS "$url" >/dev/null 2>&1; then
+      echo "$name is responding at $url."
       return
     fi
     if ! kill -0 "$pid" 2>/dev/null; then
@@ -72,7 +72,7 @@ wait_for_server() {
     sleep 1
   done
 
-  echo "$name did not become ready on port $port. Last log lines:"
+  echo "$name did not become ready at $url. Last log lines:"
   tail -n 20 "$log_file" || true
   exit 1
 }
@@ -103,7 +103,8 @@ if [[ -z "$BACKEND_PID" ]]; then
   BACKEND_PID="$(
     cd "$BACKEND_DIR"
     # nohup venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$BACKEND_PORT" >"$LOG_DIR/backend.log" 2>&1 &
-    nohup venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$BACKEND_PORT" >"$LOG_DIR/backend.log" 2>&1 &
+    nohup env BACKEND_CORS_ORIGINS="http://$LAN_IP:$FRONTEND_PORT,http://127.0.0.1:$FRONTEND_PORT,http://localhost:$FRONTEND_PORT" \
+      venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$BACKEND_PORT" >"$LOG_DIR/backend.log" 2>&1 &
     echo "$!"
   )"
 fi
@@ -113,15 +114,15 @@ if [[ -z "$FRONTEND_PID" ]]; then
   echo "Starting frontend on http://$LAN_IP:$FRONTEND_PORT ..."
   FRONTEND_PID="$(
     cd "$FRONTEND_DIR"
-    nohup env NEXT_PUBLIC_API_URL="http://$LAN_IP:$BACKEND_PORT" \
+    nohup env NEXT_PUBLIC_API_URL="http://127.0.0.1:$BACKEND_PORT" \
       npm run dev -- --hostname 0.0.0.0 --port "$FRONTEND_PORT" \
       >"$LOG_DIR/frontend.log" 2>&1 &
     echo "$!"
   )"
 fi
 
-wait_for_server "$BACKEND_PORT" "$BACKEND_PID" "Backend" "$LOG_DIR/backend.log"
-wait_for_server "$FRONTEND_PORT" "$FRONTEND_PID" "Frontend" "$LOG_DIR/frontend.log"
+wait_for_server "http://127.0.0.1:$BACKEND_PORT/health" "$BACKEND_PID" "Backend" "$LOG_DIR/backend.log"
+wait_for_server "http://127.0.0.1:$FRONTEND_PORT/login" "$FRONTEND_PID" "Frontend" "$LOG_DIR/frontend.log"
 
 cat >"$PID_FILE" <<EOF
 APP_ROOT=$APP_ROOT

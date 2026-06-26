@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, Banknote, PiggyBank, ReceiptText, ShieldCheck, TrendingUp } from "lucide-react";
+import { Activity, Banknote, Download, PiggyBank, ReceiptText, ShieldCheck, TrendingUp } from "lucide-react";
 import { AppShell } from "@/components/layout/AppShell";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/dashboard/StatCard";
@@ -11,7 +12,8 @@ import { CategoryPieChart } from "@/components/dashboard/CategoryPieChart";
 import { YearComparisonChart } from "@/components/dashboard/YearComparisonChart";
 import { BudgetProgressList } from "@/components/dashboard/BudgetProgressList";
 import { SavingsTrendChart } from "@/components/dashboard/SavingsTrendChart";
-import { api } from "@/lib/api";
+import { API_BASE_URL, api } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 import type { DashboardSummary } from "@/lib/types";
 import { currentMonth, currentYear, formatPeso } from "@/lib/utils";
 
@@ -20,6 +22,7 @@ export default function DashboardPage() {
   const [year, setYear] = useState(currentYear);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [error, setError] = useState("");
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     api
@@ -28,11 +31,43 @@ export default function DashboardPage() {
       .catch((err) => setError(err.message));
   }, [month, year]);
 
+  const exportPdf = async () => {
+    setExportingPdf(true);
+    setError("");
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_BASE_URL}/dashboard/export.pdf?month=${month}&year=${year}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        throw new Error(body.detail || "Unable to export PDF");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `family-expense-report-${year}-${String(month).padStart(2, "0")}.pdf`;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to export PDF");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
   return (
     <AppShell month={month} year={year} onMonthChange={setMonth} onYearChange={setYear}>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Income, spending pace, budgets, and household savings in one place.</p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Income, spending pace, budgets, and household savings in one place.</p>
+        </div>
+        <Button variant="outline" onClick={exportPdf} disabled={!summary || exportingPdf}>
+          <Download className="h-4 w-4" />
+          {exportingPdf ? "Exporting..." : "Export PDF"}
+        </Button>
       </div>
       {error ? <Card className="mb-4 border-destructive"><CardContent className="pt-5 text-sm text-destructive">{error}</CardContent></Card> : null}
       {!summary ? (
