@@ -37,8 +37,8 @@ export default function LoginPage() {
               }
             }}
           >
-            <Input name="email" type="email" placeholder="Email" defaultValue="demo@example.com" required />
-            <Input name="password" type="password" placeholder="Password" defaultValue="password123" required />
+            <Input name="email" type="email" placeholder="Email" required />
+            <Input name="password" type="password" placeholder="Password" required />
             {error ? <p className="text-sm text-destructive">{error}</p> : null}
             <Button>Sign in</Button>
           </form>

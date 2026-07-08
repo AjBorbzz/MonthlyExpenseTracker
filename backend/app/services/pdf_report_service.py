@@ -25,7 +25,30 @@ def _pdf_text(value: object) -> str:
 
 
 def _money(value: float | int) -> str:
-    return f"PHP {float(value):,.2f}"
+    return f"₱{float(value):,.2f}"
+
+
+def _char_width(char: str, size: int, font: str) -> float:
+    factor = 0.54
+    if char == " ":
+        factor = 0.28
+    elif char in ".,:;!|":
+        factor = 0.24
+    elif char in "-/()":
+        factor = 0.32
+    elif char in "MW@%":
+        factor = 0.82
+    elif char.isupper():
+        factor = 0.62
+    elif char.isdigit():
+        factor = 0.55
+    if font == "F2":
+        factor += 0.03
+    return size * factor
+
+
+def _text_width(text: str, size: int, font: str) -> float:
+    return sum(_char_width(char, size, font) for char in text)
 
 
 class SimplePdf:
@@ -41,8 +64,35 @@ class SimplePdf:
         self.pages.append(self.current)
 
     def text(self, x: float, y: float, value: object, size: int = 10, font: str = "F1") -> None:
-        safe = _pdf_text(value)
+        cursor = x
+        buffer = ""
+
+        def flush_buffer() -> None:
+            nonlocal buffer, cursor
+            if not buffer:
+                return
+            safe = _pdf_text(buffer)
+            self.current.append(f"BT /{font} {size} Tf {cursor:.2f} {y:.2f} Td ({safe}) Tj ET")
+            cursor += _text_width(buffer, size, font)
+            buffer = ""
+
+        for char in str(value):
+            if char == "₱":
+                flush_buffer()
+                self.peso_symbol(cursor, y, size, font)
+                cursor += size * 0.72
+            else:
+                buffer += char
+
+        flush_buffer()
+
+    def peso_symbol(self, x: float, y: float, size: int, font: str = "F1") -> None:
+        safe = _pdf_text("P")
+        self.current.append("/Span << /ActualText <FEFF20B1> >> BDC")
         self.current.append(f"BT /{font} {size} Tf {x:.2f} {y:.2f} Td ({safe}) Tj ET")
+        self.line(x + size * 0.08, y + size * 0.44, x + size * 0.62, y + size * 0.44, width=max(0.6, size * 0.055))
+        self.line(x + size * 0.08, y + size * 0.58, x + size * 0.62, y + size * 0.58, width=max(0.6, size * 0.055))
+        self.current.append("EMC")
 
     def line(self, x1: float, y1: float, x2: float, y2: float, width: float = 0.6) -> None:
         self.current.append(f"{width:.2f} w {x1:.2f} {y1:.2f} m {x2:.2f} {y2:.2f} l S")
