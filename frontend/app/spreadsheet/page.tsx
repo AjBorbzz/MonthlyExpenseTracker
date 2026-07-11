@@ -6,11 +6,13 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { BudgetAllocation, Expense, IncomeRecord } from "@/lib/types";
 import { currentMonth, currentYear, formatPeso } from "@/lib/utils";
 
 type SheetKey = "overview" | "expenses" | "income" | "budgets";
+type ExpenseFilterColumn = "expense_date" | "category_name" | "description" | "merchant" | "payment_method" | "user_name";
 
 type WorkbookCell = {
   value: string;
@@ -39,6 +41,14 @@ const sheetOrder: { key: SheetKey; label: string }[] = [
 ];
 
 const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const expenseFilterColumns: { key: ExpenseFilterColumn; label: string }[] = [
+  { key: "expense_date", label: "Date" },
+  { key: "category_name", label: "Category" },
+  { key: "description", label: "Description" },
+  { key: "merchant", label: "Merchant" },
+  { key: "payment_method", label: "Payment" },
+  { key: "user_name", label: "Added by" }
+];
 
 function cell(value: string | number, align: WorkbookCell["align"] = "left", tone?: WorkbookCell["tone"]): WorkbookCell {
   return { value: String(value), align, tone };
@@ -57,6 +67,35 @@ function getColumnLabel(index: number) {
     current = Math.floor((current - 1) / 26);
   }
   return label;
+}
+
+function getExpenseFilterValue(expense: Expense, column: ExpenseFilterColumn) {
+  if (column === "category_name") return expense.category_name || "Uncategorized";
+  if (column === "payment_method") return expense.payment_method || "-";
+  if (column === "user_name") return expense.user_name || "-";
+  return String(expense[column] || "-");
+}
+
+function buildExpenseSheet(expenses: Expense[]): WorkbookSheet {
+  const totalExpenses = expenses.reduce((sum, row) => sum + row.amount, 0);
+
+  const expenseRows: WorkbookRow[] = [
+    { isHeader: true, cells: [cell("Date"), cell("Category"), cell("Description"), cell("Merchant"), cell("Payment"), cell("Added by"), cell("Amount", "right")] },
+    ...expenses.map((expense) => ({
+      cells: [
+        cell(expense.expense_date),
+        cell(expense.category_name || "Uncategorized"),
+        cell(expense.description),
+        cell(expense.merchant || "-"),
+        cell(expense.payment_method || "-"),
+        cell(expense.user_name || "-"),
+        moneyCell(expense.amount, "expense")
+      ]
+    })),
+    { isTotal: true, cells: [cell("Total"), cell(""), cell(""), cell(""), cell(""), cell(`${expenses.length} rows`), moneyCell(totalExpenses, "expense")] }
+  ];
+
+  return { key: "expenses", label: "Expenses", columns: ["Date", "Category", "Description", "Merchant", "Payment", "Added by", "Amount"], rows: expenseRows };
 }
 
 function buildSheets(expenses: Expense[], income: IncomeRecord[], budgets: BudgetAllocation[], month: number, year: number): WorkbookSheet[] {
@@ -79,22 +118,6 @@ function buildSheets(expenses: Expense[], income: IncomeRecord[], budgets: Budge
     { cells: [cell("Allocated budget"), cell("SUM(Budgets!Allocated)"), moneyCell(totalBudget), cell(`${budgets.length} categories`)] },
     { cells: [cell("Budget remaining"), cell("Allocated - Actual"), moneyCell(remainingBudget, remainingBudget >= 0 ? "success" : "warning"), cell(remainingBudget >= 0 ? "Available" : "Overspent")] },
     { cells: [cell("Overspent categories"), cell("COUNTIF(Budgets!Status, Over)"), cell(overBudgetCount, "right", overBudgetCount ? "warning" : "success"), cell(overBudgetCount ? "Needs attention" : "Clear")] }
-  ];
-
-  const expenseRows: WorkbookRow[] = [
-    { isHeader: true, cells: [cell("Date"), cell("Category"), cell("Description"), cell("Merchant"), cell("Payment"), cell("Added by"), cell("Amount", "right")] },
-    ...expenses.map((expense) => ({
-      cells: [
-        cell(expense.expense_date),
-        cell(expense.category_name || "Uncategorized"),
-        cell(expense.description),
-        cell(expense.merchant || "-"),
-        cell(expense.payment_method || "-"),
-        cell(expense.user_name || "-"),
-        moneyCell(expense.amount, "expense")
-      ]
-    })),
-    { isTotal: true, cells: [cell("Total"), cell(""), cell(""), cell(""), cell(""), cell(`${expenses.length} rows`), moneyCell(totalExpenses, "expense")] }
   ];
 
   const incomeRows: WorkbookRow[] = [
@@ -130,7 +153,7 @@ function buildSheets(expenses: Expense[], income: IncomeRecord[], budgets: Budge
 
   return [
     { key: "overview", label: "Overview", columns: ["Metric", "Formula", "Value", "Signal"], rows: overviewRows },
-    { key: "expenses", label: "Expenses", columns: ["Date", "Category", "Description", "Merchant", "Payment", "Added by", "Amount"], rows: expenseRows },
+    buildExpenseSheet(expenses),
     { key: "income", label: "Income", columns: ["Source", "Month", "Year", "Added by", "Notes", "Amount"], rows: incomeRows },
     { key: "budgets", label: "Budgets", columns: ["Category", "Allocated", "Actual", "Remaining", "Used", "Status", "Rollover"], rows: budgetRows }
   ];
@@ -155,6 +178,8 @@ export default function SpreadsheetPage() {
   const [budgets, setBudgets] = useState<BudgetAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [expenseFilterColumn, setExpenseFilterColumn] = useState<ExpenseFilterColumn>("payment_method");
+  const [expenseFilterValue, setExpenseFilterValue] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -169,6 +194,7 @@ export default function SpreadsheetPage() {
       setIncome(incomeRows);
       setBudgets(budgetRows);
       setSelectedCell({ row: 1, column: 1 });
+      setExpenseFilterValue("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to load spreadsheet data.");
     } finally {
@@ -180,7 +206,18 @@ export default function SpreadsheetPage() {
     load();
   }, [month, year]);
 
-  const sheets = useMemo(() => buildSheets(expenses, income, budgets, month, year), [expenses, income, budgets, month, year]);
+  const expenseFilterOptions = useMemo(() => {
+    return Array.from(new Set(expenses.map((expense) => getExpenseFilterValue(expense, expenseFilterColumn))))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [expenses, expenseFilterColumn]);
+  const filteredExpenses = useMemo(() => {
+    if (!expenseFilterValue) return expenses;
+    return expenses.filter((expense) => getExpenseFilterValue(expense, expenseFilterColumn) === expenseFilterValue);
+  }, [expenses, expenseFilterColumn, expenseFilterValue]);
+  const sheets = useMemo(() => {
+    return buildSheets(expenses, income, budgets, month, year).map((item) => (item.key === "expenses" ? buildExpenseSheet(filteredExpenses) : item));
+  }, [expenses, filteredExpenses, income, budgets, month, year]);
   const sheet = sheets.find((item) => item.key === activeSheet) ?? sheets[0];
   const selectedValue = sheet.rows[selectedCell.row - 1]?.cells[selectedCell.column - 1]?.value ?? "";
   const rowCount = sheet.rows.length;
@@ -265,6 +302,66 @@ export default function SpreadsheetPage() {
             );
           })}
         </div>
+
+        {activeSheet === "expenses" ? (
+          <div className="flex flex-wrap items-end gap-3 border-b bg-muted/30 px-3 py-3">
+            <div className="min-w-44 flex-1 sm:flex-none">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="expense-filter-column">
+                Filter column
+              </label>
+              <Select
+                id="expense-filter-column"
+                value={expenseFilterColumn}
+                onChange={(event) => {
+                  setExpenseFilterColumn(event.target.value as ExpenseFilterColumn);
+                  setExpenseFilterValue("");
+                  setSelectedCell({ row: 1, column: 1 });
+                }}
+              >
+                {expenseFilterColumns.map((column) => (
+                  <option key={column.key} value={column.key}>
+                    {column.label}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="min-w-52 flex-1 sm:flex-none">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground" htmlFor="expense-filter-value">
+                Filter value
+              </label>
+              <Select
+                id="expense-filter-value"
+                value={expenseFilterValue}
+                onChange={(event) => {
+                  setExpenseFilterValue(event.target.value);
+                  setSelectedCell({ row: 1, column: 1 });
+                }}
+              >
+                <option value="">All values</option>
+                {expenseFilterOptions.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setExpenseFilterValue("");
+                setSelectedCell({ row: 1, column: 1 });
+              }}
+              disabled={!expenseFilterValue}
+            >
+              Clear filter
+            </Button>
+            <Badge variant="secondary">
+              Showing {filteredExpenses.length} of {expenses.length} expense rows
+            </Badge>
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-[5.5rem_1fr] border-b bg-white">
           <div className="border-r bg-muted/60 px-3 py-2 text-xs font-medium text-muted-foreground">
