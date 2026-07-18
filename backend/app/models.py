@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import BigInteger, Boolean, Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -143,9 +143,9 @@ class Investment(TimestampMixin, Base):
     asset_name: Mapped[str] = mapped_column(String(180), nullable=False)
     asset_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
     symbol: Mapped[str | None] = mapped_column(String(24))
-    quantity_units: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
-    invested_amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
-    current_value_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    quantity_units: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
+    invested_amount_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    current_value_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
     acquisition_date: Mapped[date | None] = mapped_column(Date)
     institution: Mapped[str | None] = mapped_column(String(180))
     notes: Mapped[str | None] = mapped_column(Text)

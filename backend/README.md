@@ -58,6 +58,8 @@ DELETE /investments/{investment_id}
 
 `GET /investments` accepts optional `asset_type` and `search` query parameters. Amounts are stored as integer cents, quantities use eight-decimal scaled integer units, and API responses include calculated gain/loss and return percentage.
 
+Investment quantities and monetary values use PostgreSQL `BIGINT` columns. On startup, the API safely widens older investment columns that were created as 32-bit integers, so existing deployments are upgraded automatically.
+
 ## Stop
 
 From the project root:

@@ -1,10 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
-from .database import Base, engine
+from .database import Base, engine, run_schema_migrations
 from .routers import auth, budgets, categories, dashboard, expenses, families, income, investments, recurring, savings_goals, users
 
 Base.metadata.create_all(bind=engine)
+run_schema_migrations()
 
 app = FastAPI(title="Monthly Family Expense Tracker API", version="1.0.0")
 
