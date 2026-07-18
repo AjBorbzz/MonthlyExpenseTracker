@@ -259,3 +259,63 @@ class SavingsGoalRead(BaseModel):
     target_date: date | None
     created_at: datetime
     updated_at: datetime
+
+
+InvestmentType = Literal[
+    "stocks",
+    "bonds",
+    "mutual_fund",
+    "etf",
+    "crypto",
+    "real_estate",
+    "time_deposit",
+    "retirement",
+    "other",
+]
+
+
+class InvestmentCreate(MoneyModel):
+    asset_name: str = Field(min_length=1, max_length=180)
+    asset_type: InvestmentType
+    symbol: str | None = Field(default=None, max_length=24)
+    quantity: Decimal = Field(default=Decimal("0"), ge=0, max_digits=24, decimal_places=8)
+    invested_amount: Decimal = Field(gt=0)
+    current_value: Decimal | None = Field(default=None, ge=0)
+    acquisition_date: date | None = None
+    institution: str | None = Field(default=None, max_length=180)
+    notes: str | None = None
+
+
+class InvestmentUpdate(MoneyModel):
+    asset_name: str | None = Field(default=None, min_length=1, max_length=180)
+    asset_type: InvestmentType | None = None
+    symbol: str | None = Field(default=None, max_length=24)
+    quantity: Decimal | None = Field(default=None, ge=0, max_digits=24, decimal_places=8)
+    invested_amount: Decimal | None = Field(default=None, gt=0)
+    current_value: Decimal | None = Field(default=None, ge=0)
+    acquisition_date: date | None = None
+    institution: str | None = Field(default=None, max_length=180)
+    notes: str | None = None
+
+
+class InvestmentRead(BaseModel):
+    id: int
+    family_id: int
+    user_id: int
+    user_name: str | None = None
+    asset_name: str
+    asset_type: InvestmentType
+    symbol: str | None
+    quantity_units: int
+    quantity: float
+    invested_amount_cents: int
+    invested_amount: float
+    current_value_cents: int
+    current_value: float
+    gain_loss: float
+    return_percentage: float
+    acquisition_date: date | None
+    institution: str | None
+    notes: str | None
+    created_at: datetime
+    updated_at: datetime

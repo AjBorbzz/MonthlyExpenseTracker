@@ -4,8 +4,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from ..auth import cents_to_pesos
-from ..models import BudgetAllocation, Expense, ExpenseCategory, IncomeRecord, RecurringExpense, SavingsGoal
+from ..auth import cents_to_pesos, units_to_quantity
+from ..models import BudgetAllocation, Expense, ExpenseCategory, IncomeRecord, Investment, RecurringExpense, SavingsGoal
 
 
 def ensure_category(db: Session, category_id: int, family_id: int) -> ExpenseCategory:
@@ -133,4 +133,35 @@ def goal_to_dict(goal: SavingsGoal) -> dict:
         "target_date": goal.target_date,
         "created_at": goal.created_at,
         "updated_at": goal.updated_at,
+    }
+
+
+def investment_to_dict(investment: Investment) -> dict:
+    gain_loss_cents = investment.current_value_cents - investment.invested_amount_cents
+    return_percentage = (
+        gain_loss_cents / investment.invested_amount_cents * 100
+        if investment.invested_amount_cents
+        else 0
+    )
+    return {
+        "id": investment.id,
+        "family_id": investment.family_id,
+        "user_id": investment.user_id,
+        "user_name": investment.user.full_name if investment.user else None,
+        "asset_name": investment.asset_name,
+        "asset_type": investment.asset_type,
+        "symbol": investment.symbol,
+        "quantity_units": investment.quantity_units,
+        "quantity": units_to_quantity(investment.quantity_units),
+        "invested_amount_cents": investment.invested_amount_cents,
+        "invested_amount": cents_to_pesos(investment.invested_amount_cents),
+        "current_value_cents": investment.current_value_cents,
+        "current_value": cents_to_pesos(investment.current_value_cents),
+        "gain_loss": cents_to_pesos(gain_loss_cents),
+        "return_percentage": round(return_percentage, 2),
+        "acquisition_date": investment.acquisition_date,
+        "institution": investment.institution,
+        "notes": investment.notes,
+        "created_at": investment.created_at,
+        "updated_at": investment.updated_at,
     }

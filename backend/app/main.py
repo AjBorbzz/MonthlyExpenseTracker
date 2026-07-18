@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import os
 from .database import Base, engine
-from .routers import auth, budgets, categories, dashboard, expenses, families, income, recurring, savings_goals, users
+from .routers import auth, budgets, categories, dashboard, expenses, families, income, investments, recurring, savings_goals, users
 
 Base.metadata.create_all(bind=engine)
 
@@ -36,6 +36,7 @@ app.include_router(families.router)
 app.include_router(categories.router)
 app.include_router(expenses.router)
 app.include_router(income.router)
+app.include_router(investments.router)
 app.include_router(budgets.router)
 app.include_router(recurring.router)
 app.include_router(savings_goals.router)

@@ -45,6 +45,19 @@ expense_date,description,category,amount,merchant,payment_method,notes,is_recurr
 
 The import is family-scoped, validates each row, skips duplicates by default, and returns imported/skipped/error counts.
 
+## Investments API
+
+Authenticated family members can manage shared investment holdings with:
+
+```http
+GET /investments
+POST /investments
+PUT /investments/{investment_id}
+DELETE /investments/{investment_id}
+```
+
+`GET /investments` accepts optional `asset_type` and `search` query parameters. Amounts are stored as integer cents, quantities use eight-decimal scaled integer units, and API responses include calculated gain/loss and return percentage.
+
 ## Stop
 
 From the project root:
@@ -69,4 +82,4 @@ Demo login:
 - Email: `demo@example.com`
 - Password: `password123`
 
-Money is stored as integer cents in SQLite and exposed as peso decimal values in API responses.
+Money is stored as integer cents in SQLite and exposed as peso decimal values in API responses. Investment values remain manual and do not require a market-data service.

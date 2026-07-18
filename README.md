@@ -15,7 +15,8 @@ A production-minded MVP for manual-first household budgeting. Families can share
 - Family workspaces with invite codes
 - Shared household data scoped by authenticated family
 - Expense categories with soft delete
-- Expense, income, budget, recurring expense, and savings goal CRUD
+- Expense, income, budget, recurring expense, savings goal, and investment CRUD
+- Manual investment portfolio tracking with asset allocation, current value, gain/loss, and return summaries
 - Dashboard summary with savings rate, projected month-end savings, budget health score, spending velocity, recurring due soon, and rule-based insights
 - Monthly trend, category pie, year-to-year comparison, budget progress, and savings trend charts
 - CSV export for selected month/year expenses
@@ -226,6 +227,7 @@ expense_date,description,category,amount,merchant,payment_method,notes,is_recurr
 - `GET /expenses/import-template`
 - `POST /expenses/import`
 - `GET|POST|PUT|DELETE /income`
+- `GET|POST|PUT|DELETE /investments`
 - `GET|POST|PUT|DELETE /budgets`
 - `GET|POST|PUT|DELETE /recurring`
 - `GET|POST|PUT|DELETE /savings-goals`
@@ -235,7 +237,19 @@ All non-auth routes require a bearer token and scope queries to the current user
 
 ## Database Design Summary
 
-The SQLite schema includes users, families, family members, expense categories, expenses, income records, budget allocations, recurring expenses, and savings goals. Monetary values are stored as integer cents to avoid floating-point drift.
+The SQLite schema includes users, families, family members, expense categories, expenses, income records, budget allocations, recurring expenses, savings goals, and investments. Monetary values are stored as integer cents to avoid floating-point drift. Investment quantities use scaled integer units with eight decimal places of precision.
+
+## Investment Tracking
+
+Open `/investments` from the sidebar to manage the family's manually valued holdings. Each investment records:
+
+- Asset name and type
+- Optional ticker or symbol and quantity
+- Invested amount and current value
+- Acquisition date and institution or platform
+- Notes and the family member who added the record
+
+The page calculates invested capital, current portfolio value, total gain or loss, overall return, and allocation by asset type. Current values are entered manually; the app does not connect to brokers or market-data APIs.
 
 ## Future Enhancements
 
@@ -247,3 +261,4 @@ The SQLite schema includes users, families, family members, expense categories, 
 - Family role permissions
 - Local LLM-based financial insights when available
 - Bank sync integration if legally and technically feasible
+- Optional market-price integrations for investment valuations

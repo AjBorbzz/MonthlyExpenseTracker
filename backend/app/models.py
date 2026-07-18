@@ -132,3 +132,23 @@ class SavingsGoal(TimestampMixin, Base):
     current_amount_cents: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     target_date: Mapped[date | None] = mapped_column(Date)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Investment(TimestampMixin, Base):
+    __tablename__ = "investments"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("families.id"), index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    asset_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    asset_type: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
+    symbol: Mapped[str | None] = mapped_column(String(24))
+    quantity_units: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    invested_amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    current_value_cents: Mapped[int] = mapped_column(Integer, nullable=False)
+    acquisition_date: Mapped[date | None] = mapped_column(Date)
+    institution: Mapped[str | None] = mapped_column(String(180))
+    notes: Mapped[str | None] = mapped_column(Text)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user: Mapped[User] = relationship()

@@ -9,6 +9,7 @@ from .models import (
     Family,
     FamilyMember,
     IncomeRecord,
+    Investment,
     RecurringExpense,
     SavingsGoal,
     User,
@@ -30,13 +31,61 @@ DEFAULT_CATEGORIES = [
 ]
 
 
+def add_demo_investments(db, family_id: int, user_id: int, today: date):
+    db.add_all(
+        [
+            Investment(
+                family_id=family_id,
+                user_id=user_id,
+                asset_name="Ayala Corporation",
+                asset_type="stocks",
+                symbol="AC",
+                quantity_units=150 * 100_000_000,
+                invested_amount_cents=pesos_to_cents(93000),
+                current_value_cents=pesos_to_cents(105750),
+                acquisition_date=date(today.year - 1, 8, 15),
+                institution="COL Financial",
+            ),
+            Investment(
+                family_id=family_id,
+                user_id=user_id,
+                asset_name="Philippine Equity Index Fund",
+                asset_type="mutual_fund",
+                quantity_units=250 * 100_000_000,
+                invested_amount_cents=pesos_to_cents(125000),
+                current_value_cents=pesos_to_cents(138500),
+                acquisition_date=date(today.year - 2, 3, 10),
+                institution="BPI Investment Management",
+            ),
+            Investment(
+                family_id=family_id,
+                user_id=user_id,
+                asset_name="12-Month Time Deposit",
+                asset_type="time_deposit",
+                quantity_units=0,
+                invested_amount_cents=pesos_to_cents(200000),
+                current_value_cents=pesos_to_cents(207000),
+                acquisition_date=date(today.year, 1, 20),
+                institution="BDO",
+                notes="Value includes accrued interest entered manually.",
+            ),
+        ]
+    )
+
+
 def seed():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
         existing = db.query(User).filter(User.email == "demo@example.com").first()
         if existing:
-            print("Demo data already exists.")
+            membership = db.query(FamilyMember).filter(FamilyMember.user_id == existing.id).first()
+            if membership and not db.query(Investment).filter(Investment.family_id == membership.family_id).first():
+                add_demo_investments(db, membership.family_id, existing.id, date.today())
+                db.commit()
+                print("Demo investments added to the existing demo workspace.")
+            else:
+                print("Demo data already exists.")
             return
 
         user = User(email="demo@example.com", full_name="Demo Parent", password_hash=hash_password("password123"))
@@ -177,6 +226,7 @@ def seed():
                 ),
             ]
         )
+        add_demo_investments(db, family.id, user.id, today)
         db.commit()
         print("Seed complete. Demo login: demo@example.com / password123")
     finally:

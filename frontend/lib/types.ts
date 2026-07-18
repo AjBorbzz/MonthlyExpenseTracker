@@ -119,6 +119,43 @@ export type SavingsGoal = {
   updated_at: string;
 };
 
+export const investmentTypeOptions = [
+  { value: "stocks", label: "Stocks" },
+  { value: "bonds", label: "Bonds" },
+  { value: "mutual_fund", label: "Mutual Fund" },
+  { value: "etf", label: "ETF" },
+  { value: "crypto", label: "Crypto" },
+  { value: "real_estate", label: "Real Estate" },
+  { value: "time_deposit", label: "Time Deposit" },
+  { value: "retirement", label: "Retirement Fund" },
+  { value: "other", label: "Other" }
+] as const;
+
+export type InvestmentType = (typeof investmentTypeOptions)[number]["value"];
+
+export type Investment = {
+  id: number;
+  family_id: number;
+  user_id: number;
+  user_name?: string | null;
+  asset_name: string;
+  asset_type: InvestmentType;
+  symbol?: string | null;
+  quantity_units: number;
+  quantity: number;
+  invested_amount_cents: number;
+  invested_amount: number;
+  current_value_cents: number;
+  current_value: number;
+  gain_loss: number;
+  return_percentage: number;
+  acquisition_date?: string | null;
+  institution?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type BudgetVsActual = {
   category_id: number;
   category_name: string;

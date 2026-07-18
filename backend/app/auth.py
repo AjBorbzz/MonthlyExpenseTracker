@@ -45,3 +45,15 @@ def pesos_to_cents(value: Decimal | int | float | str) -> int:
 
 def cents_to_pesos(cents: int) -> float:
     return float(Decimal(cents) / Decimal(100))
+
+
+QUANTITY_SCALE = Decimal("100000000")
+
+
+def quantity_to_units(value: Decimal | int | float | str) -> int:
+    decimal = Decimal(str(value)).quantize(Decimal("0.00000001"), rounding=ROUND_HALF_UP)
+    return int(decimal * QUANTITY_SCALE)
+
+
+def units_to_quantity(units: int) -> float:
+    return float(Decimal(units) / QUANTITY_SCALE)

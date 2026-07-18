@@ -64,7 +64,12 @@ Demo login:
 - `/expenses`
 - `/categories`
 - `/income`
+- `/investments`
 - `/budgets`
 - `/goals`
 - `/recurring`
 - `/settings`
+
+## Investments
+
+The `/investments` page provides family-scoped holding management, search and asset-type filters, portfolio value and return summaries, and an asset-allocation chart. Add or edit current values manually; no broker or market-data connection is required.

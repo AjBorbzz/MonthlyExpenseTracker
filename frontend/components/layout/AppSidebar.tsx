@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, CalendarClock, CircleDollarSign, FolderOpen, Gauge, Home, PiggyBank, ReceiptText, Settings, Table2 } from "lucide-react";
+import { BarChart3, CalendarClock, CircleDollarSign, FolderOpen, Gauge, Home, PiggyBank, ReceiptText, Settings, Table2, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const nav = [
@@ -11,6 +11,7 @@ export const nav = [
   { href: "/expenses", label: "Expenses", icon: ReceiptText },
   { href: "/categories", label: "Categories", icon: FolderOpen },
   { href: "/income", label: "Income", icon: CircleDollarSign },
+  { href: "/investments", label: "Investments", icon: TrendingUp },
   { href: "/budgets", label: "Budgets", icon: BarChart3 },
   { href: "/goals", label: "Goals", icon: PiggyBank },
   { href: "/recurring", label: "Recurring", icon: CalendarClock },
