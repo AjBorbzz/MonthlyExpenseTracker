@@ -3,7 +3,12 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Family Expense Tracker | Household Budgeting",
-  description: "Manual-first family budgeting with expenses, income, savings goals, recurring bills, and CSV tools."
+  description: "Manual-first family budgeting with expenses, income, savings goals, recurring bills, and CSV tools.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/icon.png"
+  }
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
