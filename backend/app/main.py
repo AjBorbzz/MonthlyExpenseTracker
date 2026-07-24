@@ -47,3 +47,7 @@ app.include_router(dashboard.router)
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+@app.get("/")
+def root():
+    return {"message": "Hello, Aj"}
