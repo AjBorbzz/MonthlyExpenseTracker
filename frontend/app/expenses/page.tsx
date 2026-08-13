@@ -4,6 +4,7 @@ import { CalendarPlus, Download, Edit, Plus, Trash2, Upload } from "lucide-react
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -91,7 +92,7 @@ export default function ExpensesPage() {
   return (
     <AppShell month={month} year={year} onMonthChange={setMonth} onYearChange={setYear}>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div><h1 className="text-2xl font-semibold">Expenses</h1><p className="text-sm text-muted-foreground">Log and review manual transactions.</p></div>
+        <div><h1 className="text-2xl font-semibold">Expenses</h1><p className="text-sm text-muted-foreground">Log and review household transactions.</p></div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={exportCsv}><Download className="h-4 w-4" /> CSV</Button>
           <Dialog open={dailyOpen} onOpenChange={setDailyOpen}>
@@ -167,7 +168,7 @@ export default function ExpensesPage() {
       ) : null}
       <Card><CardContent className="overflow-x-auto pt-5">
         <Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Description</TableHead><TableHead>Category</TableHead><TableHead>Added by</TableHead><TableHead className="text-right">Amount</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader><TableBody>
-          {expenses.map((expense) => <TableRow key={expense.id}><TableCell>{expense.expense_date}</TableCell><TableCell><p className="font-medium">{expense.description}</p><p className="text-xs text-muted-foreground">{expense.merchant || expense.payment_method}</p></TableCell><TableCell>{expense.category_name}</TableCell><TableCell>{expense.user_name}</TableCell><TableCell className="text-right">{formatPeso(expense.amount)}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => { setEditing(expense); setOpen(true); }} aria-label="Edit expense"><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={async () => { await api.delete(`/expenses/${expense.id}`); load(); }} aria-label="Delete expense"><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}
+          {expenses.map((expense) => <TableRow key={expense.id}><TableCell>{expense.expense_date}</TableCell><TableCell><div className="flex flex-wrap items-center gap-2"><p className="font-medium">{expense.description}</p>{expense.recurring_expense_id ? <Badge variant="secondary">Recurring</Badge> : null}</div><p className="text-xs text-muted-foreground">{expense.merchant || expense.payment_method}</p></TableCell><TableCell>{expense.category_name}</TableCell><TableCell>{expense.user_name}</TableCell><TableCell className="text-right">{formatPeso(expense.amount)}</TableCell><TableCell className="text-right"><Button variant="ghost" size="icon" onClick={() => { setEditing(expense); setOpen(true); }} aria-label="Edit expense"><Edit className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={async () => { await api.delete(`/expenses/${expense.id}`); load(); }} aria-label="Delete expense"><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}
         </TableBody></Table>
         {!expenses.length ? <p className="py-6 text-sm text-muted-foreground">No expenses found for this filter.</p> : null}
       </CardContent></Card>

@@ -35,6 +35,8 @@ def expense_to_dict(expense: Expense) -> dict:
         "expense_date": expense.expense_date,
         "notes": expense.notes,
         "is_recurring": expense.is_recurring,
+        "recurring_expense_id": expense.recurring_expense_id,
+        "recurring_due_date": expense.recurring_due_date,
         "created_at": expense.created_at,
         "updated_at": expense.updated_at,
     }
@@ -102,10 +104,12 @@ def budget_to_dict(db: Session, budget: BudgetAllocation) -> dict:
     }
 
 
-def recurring_to_dict(item: RecurringExpense) -> dict:
+def recurring_to_dict(item: RecurringExpense, last_generated_date: date | None = None) -> dict:
     return {
         "id": item.id,
         "family_id": item.family_id,
+        "created_by_user_id": item.created_by_user_id,
+        "created_by_user_name": item.created_by_user.full_name if item.created_by_user else None,
         "category_id": item.category_id,
         "category_name": item.category.name if item.category else None,
         "name": item.name,
@@ -113,8 +117,11 @@ def recurring_to_dict(item: RecurringExpense) -> dict:
         "amount": cents_to_pesos(item.amount_cents),
         "frequency": item.frequency,
         "next_due_date": item.next_due_date,
+        "merchant": item.merchant,
+        "payment_method": item.payment_method,
         "is_active": item.is_active,
         "notes": item.notes,
+        "last_generated_date": last_generated_date,
         "created_at": item.created_at,
     }
 

@@ -73,3 +73,7 @@ Demo login:
 ## Investments
 
 The `/investments` page provides family-scoped holding management, search and asset-type filters, portfolio value and return summaries, and an asset-allocation chart. Add or edit current values manually; no broker or market-data connection is required.
+
+## Recurring Expenses
+
+The `/recurring` page manages automatic expense schedules. Active due entries generate linked expenses when Dashboard, Expenses, or Recurring is opened. The page shows the last generated and next due dates, supports activation/deactivation, and includes a `Process due` command for an immediate catch-up run.

@@ -60,6 +60,18 @@ DELETE /investments/{investment_id}
 
 Investment quantities and monetary values use PostgreSQL `BIGINT` columns. On startup, the API safely widens older investment columns that were created as 32-bit integers, so existing deployments are upgraded automatically.
 
+## Recurring Expense Processing
+
+Active recurring schedules automatically generate linked expenses through an idempotent processor. It runs before recurring lists, expense lists and exports, and dashboard summaries and exports are returned.
+
+```http
+POST /recurring/process-due
+```
+
+The endpoint can also be called manually. Processing catches up missed weekly, monthly, and yearly occurrences, advances `next_due_date`, and uses a database uniqueness constraint to prevent duplicate schedule/date occurrences. Dates use `APP_TIMEZONE`, which defaults to `Asia/Manila`.
+
+Existing SQLite and PostgreSQL databases are upgraded automatically at startup with schedule ownership, recurrence anchors, generated-expense linkage, and occurrence indexes.
+
 ## Stop
 
 From the project root:

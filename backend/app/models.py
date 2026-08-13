@@ -59,6 +59,14 @@ class ExpenseCategory(TimestampMixin, Base):
 
 class Expense(TimestampMixin, Base):
     __tablename__ = "expenses"
+    __table_args__ = (
+        UniqueConstraint(
+            "family_id",
+            "recurring_expense_id",
+            "recurring_due_date",
+            name="uq_expense_recurring_occurrence",
+        ),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     family_id: Mapped[int] = mapped_column(ForeignKey("families.id"), index=True, nullable=False)
@@ -71,6 +79,10 @@ class Expense(TimestampMixin, Base):
     expense_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     is_recurring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    recurring_expense_id: Mapped[int | None] = mapped_column(
+        ForeignKey("recurring_expenses.id"), index=True
+    )
+    recurring_due_date: Mapped[date | None] = mapped_column(Date, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     category: Mapped[ExpenseCategory] = relationship()
@@ -112,14 +124,20 @@ class RecurringExpense(TimestampMixin, Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     family_id: Mapped[int] = mapped_column(ForeignKey("families.id"), index=True, nullable=False)
+    created_by_user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
     category_id: Mapped[int] = mapped_column(ForeignKey("expense_categories.id"), index=True, nullable=False)
     name: Mapped[str] = mapped_column(String(180), nullable=False)
     amount_cents: Mapped[int] = mapped_column(Integer, nullable=False)
     frequency: Mapped[str] = mapped_column(String(20), nullable=False)
     next_due_date: Mapped[date] = mapped_column(Date, index=True, nullable=False)
+    anchor_day: Mapped[int] = mapped_column(Integer, nullable=False)
+    anchor_month: Mapped[int] = mapped_column(Integer, nullable=False)
+    merchant: Mapped[str | None] = mapped_column(String(255))
+    payment_method: Mapped[str | None] = mapped_column(String(80))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text)
     category: Mapped[ExpenseCategory] = relationship()
+    created_by_user: Mapped[User] = relationship()
 
 
 class SavingsGoal(TimestampMixin, Base):

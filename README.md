@@ -16,6 +16,7 @@ A production-minded MVP for manual-first household budgeting. Families can share
 - Shared household data scoped by authenticated family
 - Expense categories with soft delete
 - Expense, income, budget, recurring expense, savings goal, and investment CRUD
+- Automatic recurring-expense generation with missed-date catch-up and duplicate protection
 - Manual investment portfolio tracking with asset allocation, current value, gain/loss, and return summaries
 - Dashboard summary with savings rate, projected month-end savings, budget health score, spending velocity, recurring due soon, and rule-based insights
 - Monthly trend, category pie, year-to-year comparison, budget progress, and savings trend charts
@@ -230,6 +231,7 @@ expense_date,description,category,amount,merchant,payment_method,notes,is_recurr
 - `GET|POST|PUT|DELETE /investments`
 - `GET|POST|PUT|DELETE /budgets`
 - `GET|POST|PUT|DELETE /recurring`
+- `POST /recurring/process-due`
 - `GET|POST|PUT|DELETE /savings-goals`
 - `GET /dashboard/summary`
 
@@ -250,6 +252,18 @@ Open `/investments` from the sidebar to manage the family's manually valued hold
 - Notes and the family member who added the record
 
 The page calculates invested capital, current portfolio value, total gain or loss, overall return, and allocation by asset type. Current values are entered manually; the app does not connect to brokers or market-data APIs.
+
+## Recurring Expenses
+
+Recurring entries are retained as schedules and automatically create normal expense records when they become due. Processing runs when a family member opens Dashboard, Expenses, or Recurring, so missed dates are caught up after the app or hosting service has been offline.
+
+- Weekly, monthly, and yearly schedules are supported.
+- Monthly schedules preserve the intended day where possible, including month-end dates.
+- Generated expenses retain the schedule, due date, creator, category, merchant, payment method, and notes.
+- Each schedule and due-date combination can generate only one expense, preventing duplicates during retries.
+- Inactive schedules do not generate expenses.
+- Use `Process due` on the Recurring page to run processing manually.
+- Schedules with generated history must be deactivated instead of deleted, preserving their audit trail.
 
 ## Future Enhancements
 

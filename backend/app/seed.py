@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 
 from .auth import hash_password, pesos_to_cents
-from .database import Base, SessionLocal, engine
+from .database import Base, SessionLocal, engine, run_schema_migrations
 from .models import (
     BudgetAllocation,
     Expense,
@@ -75,6 +75,7 @@ def add_demo_investments(db, family_id: int, user_id: int, today: date):
 
 def seed():
     Base.metadata.create_all(bind=engine)
+    run_schema_migrations()
     db = SessionLocal()
     try:
         existing = db.query(User).filter(User.email == "demo@example.com").first()
@@ -181,29 +182,38 @@ def seed():
             [
                 RecurringExpense(
                     family_id=family.id,
+                    created_by_user_id=user.id,
                     category_id=categories["Rent"].id,
                     name="Rent",
                     amount_cents=pesos_to_cents(32000),
                     frequency="monthly",
                     next_due_date=today + timedelta(days=3),
+                    anchor_day=(today + timedelta(days=3)).day,
+                    anchor_month=(today + timedelta(days=3)).month,
                     is_active=True,
                 ),
                 RecurringExpense(
                     family_id=family.id,
+                    created_by_user_id=user.id,
                     category_id=categories["Internet"].id,
                     name="Internet subscription",
                     amount_cents=pesos_to_cents(1899),
                     frequency="monthly",
                     next_due_date=today + timedelta(days=6),
+                    anchor_day=(today + timedelta(days=6)).day,
+                    anchor_month=(today + timedelta(days=6)).month,
                     is_active=True,
                 ),
                 RecurringExpense(
                     family_id=family.id,
+                    created_by_user_id=user.id,
                     category_id=categories["Insurance"].id,
                     name="Life insurance",
                     amount_cents=pesos_to_cents(5500),
                     frequency="monthly",
                     next_due_date=today + timedelta(days=13),
+                    anchor_day=(today + timedelta(days=13)).day,
+                    anchor_month=(today + timedelta(days=13)).month,
                     is_active=True,
                 ),
             ]

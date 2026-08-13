@@ -46,6 +46,8 @@ export type Expense = {
   expense_date: string;
   notes?: string | null;
   is_recurring: boolean;
+  recurring_expense_id?: number | null;
+  recurring_due_date?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -93,6 +95,8 @@ export type BudgetAllocation = {
 export type RecurringExpense = {
   id: number;
   family_id: number;
+  created_by_user_id: number;
+  created_by_user_name?: string | null;
   category_id: number;
   category_name?: string | null;
   name: string;
@@ -100,9 +104,18 @@ export type RecurringExpense = {
   amount: number;
   frequency: "monthly" | "weekly" | "yearly";
   next_due_date: string;
+  merchant?: string | null;
+  payment_method?: string | null;
   is_active: boolean;
   notes?: string | null;
+  last_generated_date?: string | null;
   created_at: string;
+};
+
+export type RecurringProcessResult = {
+  generated_count: number;
+  processed_schedule_count: number;
+  pending_catch_up: boolean;
 };
 
 export type SavingsGoal = {

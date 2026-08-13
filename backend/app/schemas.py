@@ -119,6 +119,8 @@ class ExpenseRead(BaseModel):
     expense_date: date
     notes: str | None
     is_recurring: bool
+    recurring_expense_id: int | None = None
+    recurring_due_date: date | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -203,7 +205,9 @@ class RecurringCreate(MoneyModel):
     name: str = Field(min_length=1, max_length=180)
     amount: Decimal = Field(gt=0)
     frequency: Literal["monthly", "weekly", "yearly"]
-    next_due_date: date
+    next_due_date: date = Field(ge=date(2000, 1, 1), le=date(2100, 12, 31))
+    merchant: str | None = Field(default=None, max_length=255)
+    payment_method: str | None = Field(default=None, max_length=80)
     is_active: bool = True
     notes: str | None = None
 
@@ -213,7 +217,9 @@ class RecurringUpdate(MoneyModel):
     name: str | None = Field(default=None, min_length=1, max_length=180)
     amount: Decimal | None = Field(default=None, gt=0)
     frequency: Literal["monthly", "weekly", "yearly"] | None = None
-    next_due_date: date | None = None
+    next_due_date: date | None = Field(default=None, ge=date(2000, 1, 1), le=date(2100, 12, 31))
+    merchant: str | None = Field(default=None, max_length=255)
+    payment_method: str | None = Field(default=None, max_length=80)
     is_active: bool | None = None
     notes: str | None = None
 
@@ -221,6 +227,8 @@ class RecurringUpdate(MoneyModel):
 class RecurringRead(BaseModel):
     id: int
     family_id: int
+    created_by_user_id: int
+    created_by_user_name: str | None = None
     category_id: int
     category_name: str | None = None
     name: str
@@ -228,9 +236,18 @@ class RecurringRead(BaseModel):
     amount: float
     frequency: str
     next_due_date: date
+    merchant: str | None
+    payment_method: str | None
     is_active: bool
     notes: str | None
+    last_generated_date: date | None = None
     created_at: datetime
+
+
+class RecurringProcessResult(BaseModel):
+    generated_count: int
+    processed_schedule_count: int
+    pending_catch_up: bool
 
 
 class SavingsGoalCreate(MoneyModel):

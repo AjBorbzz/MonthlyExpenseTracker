@@ -13,6 +13,7 @@ from ..database import get_db
 from ..dependencies import CurrentUser, get_current_user
 from ..models import Expense, ExpenseCategory
 from ..schemas import ExpenseCreate, ExpenseImportResult, ExpenseRead, ExpenseUpdate
+from ..services.recurring_service import process_due_recurring_expenses
 from ._helpers import ensure_category, expense_to_dict
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -53,6 +54,7 @@ def list_expenses(
     current: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    process_due_recurring_expenses(db, current.family_id, current.user.id)
     query = _expense_query(db, current.family_id)
     if month:
         query = query.filter(extract("month", Expense.expense_date) == month)
@@ -75,6 +77,7 @@ def export_expenses(
     current: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    process_due_recurring_expenses(db, current.family_id, current.user.id)
     expenses = (
         _expense_query(db, current.family_id)
         .filter(extract("month", Expense.expense_date) == month, extract("year", Expense.expense_date) == year)
